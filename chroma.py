@@ -1,7 +1,8 @@
-from langchain_community.embeddings import DashScopeEmbeddings
 from langchain_community.chat_models import ChatTongyi
 from langchain_chroma import Chroma
+from langchain_community.embeddings import DashScopeEmbeddings
 from langchain_core.documents import Document
+from langchain_core.embeddings import Embeddings
 from langchain_core.prompts import ChatPromptTemplate
 import os
 
@@ -9,10 +10,61 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")
+EMBEDDING_DIMENSIONS = 512  # 可选：64, 128, 256, 512, 768, 1024, 1536, 2048 等
+
+# class DashScopeOpenAICompatibleEmbeddings(Embeddings):
+#     """DashScope embedding（OpenAI 兼容接口）封装：通过 dimensions 控制向量维度。"""
+
+#     def __init__(
+#         self,
+#         dashscope_api_key: str,
+#         model: str = "text-embedding-v4",
+#         dimensions: int | None = None,
+#         base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1",
+#     ):
+#         from openai import OpenAI
+
+#         if not dashscope_api_key:
+#             raise ValueError("DASHSCOPE_API_KEY 未设置")
+
+#         self._client = OpenAI(api_key=dashscope_api_key, base_url=base_url)
+#         self._model = model
+#         self._dimensions = dimensions
+
+#     def _embed(self, texts: list[str]) -> list[list[float]]:
+#         kwargs = {}
+#         if self._dimensions is not None:
+#             kwargs["dimensions"] = self._dimensions
+
+#         resp = self._client.embeddings.create(
+#             model=self._model,
+#             input=texts,
+#             encoding_format="float",
+#             **kwargs,
+#         )
+#         return [item.embedding for item in resp.data]
+
+#     def embed_documents(self, texts: list[str]) -> list[list[float]]:
+#         return self._embed(texts)
+
+#     def embed_query(self, text: str) -> list[float]:
+#         return self._embed([text])[0]
+
+
+# # 注意：Chroma 本身不“设置维度”；维度由 embedding 输出决定，且同一个 collection 内必须一致。
+# embeddings = DashScopeOpenAICompatibleEmbeddings(
+#     dashscope_api_key=DASHSCOPE_API_KEY,
+#     model="text-embedding-v4",
+#     dimensions=EMBEDDING_DIMENSIONS,
+# )
+
 embeddings = DashScopeEmbeddings(
-    model="text-embedding-v4",
-    dashscope_api_key=DASHSCOPE_API_KEY
+    dashscope_api_key=DASHSCOPE_API_KEY,
+    model="text-embedding-v4"
 )
+
+embedded = embeddings.embed_query("hello world!")
+print(f"embedding dim = {len(embedded)}")
 
 import shutil
 import os
