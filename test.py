@@ -8,19 +8,17 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-# 初始化 DashScope 嵌入模型
 DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")
 embeddings = DashScopeEmbeddings(
     model="text-embedding-v4",
     dashscope_api_key=DASHSCOPE_API_KEY
 )
 
-# 检查并清空已有数据（避免重复添加）
 import shutil
-import os as os_module
+import os
 
 # 检查持久化目录是否存在，如果存在则删除（重新开始）
-if os_module.path.exists("./chroma_langchain_db"):
+if os.path.exists("./chroma_langchain_db"):
     print("检测到已有数据，正在清空...")
     shutil.rmtree("./chroma_langchain_db")
     print("数据已清空\n")
@@ -32,7 +30,7 @@ vector_store = Chroma(
     persist_directory="./chroma_langchain_db",
 )
 
-# 准备示例文档
+# 示例文档
 documents = [
     Document(
         page_content="Python 是一种高级编程语言，广泛用于数据科学和机器学习。",
@@ -56,7 +54,6 @@ documents = [
     ),
 ]
 
-# 添加文档到向量存储
 print("正在添加文档到向量存储...")
 vector_store.add_documents(documents)
 print(f"成功添加 {len(documents)} 个文档\n")
@@ -98,11 +95,15 @@ chatLLM = ChatTongyi(
 def format_docs(docs):
     return "\n\n".join([doc.page_content for doc in docs])
 
-# 创建提示模板
-system_template = """基于以下上下文信息回答问题。如果你不知道答案，就说不知道，不要编造答案。
+# 提示模板
+system_template = """
 
-上下文信息：
-{context}"""
+    基于以下上下文信息回答问题。如果你不知道答案，就说不知道，不要编造答案。
+
+    上下文信息：
+    {context}
+
+"""
 
 human_template = "{question}"
 
